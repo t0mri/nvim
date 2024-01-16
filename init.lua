@@ -10,6 +10,27 @@ vim.o.wrap = false
 vim.loader.enable()
 vim.cmd("imap <C-c> <Esc>")
 
+local nameSpaceId = vim.api.nvim_create_namespace("markdown")
+local maxLineLength = 80
+function CheckForLongLine()
+	if (vim.fn.col('.') > maxLineLength) then
+		vim.api.nvim_buf_set_extmark(
+			0,
+			nameSpaceId,
+			vim.fn.line(".") - 1,
+			0,
+			{
+				id = vim.fn.line("."),
+				virt_text = { { "Exceeding max line length ("..maxLineLength..")", "WarningMsg" } },
+				virt_text_pos = "right_align"
+			})
+	else
+		vim.api.nvim_buf_del_extmark(0, nameSpaceId, vim.fn.line("."))
+	end
+end
+
+vim.cmd("autocmd TextChangedI *.md lua CheckForLongLine()")
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
 	vim.fn.system({
@@ -83,6 +104,7 @@ require("lazy").setup({
 			cmp.setup({
 				mapping = cmp.mapping.preset.insert({
 					["<C-Space>"] = cmp.mapping.complete(),
+					['<C-e>'] = cmp.mapping.abort(),
 					["<CR>"] = cmp.mapping.confirm({ select = true }),
 					["<Tab>"] = cmp.mapping(function(fallback)
 						if cmp.visible() then
@@ -95,7 +117,6 @@ require("lazy").setup({
 							fallback()
 						end
 					end, { "i", "s" }),
-
 					["<S-Tab>"] = cmp.mapping(function(fallback)
 						if cmp.visible() then
 							cmp.select_prev_item()
@@ -179,8 +200,6 @@ require("lazy").setup({
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
 			vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end)
-			vim.keymap.set("n", "<leader>xw",
-				function() require("trouble").toggle("workspace_diagnostics") end)
 		end
 	},
 	{
@@ -203,6 +222,180 @@ require("lazy").setup({
 			vim.keymap.set("n", "<C-/>", ":CommentToggle<CR>")
 			vim.keymap.set("v", "<C-/>", ":'<,'>CommentToggle<CR>")
 		end,
+	},
+	{
+		"elentok/format-on-save.nvim",
+		config = function()
+			local format_on_save = require("format-on-save")
+			local formatters = require("format-on-save.formatters")
+
+			local formatter_languages = {
+				prettierd = {
+					"css",
+					"html",
+					"json",
+					"javascript",
+					"javascriptreact",
+					"markdown",
+					"scss",
+					"typescript",
+					"typescriptreact",
+				},
+			}
+			local formatter_by_ft = {}
+			for formatter, languages in pairs(formatter_languages) do
+				for _, language in pairs(languages) do
+					formatter_by_ft[language] = formatters[formatter]
+				end
+			end
+
+			format_on_save.setup({
+				exclude_path_patterns = {
+					"/node_modules/",
+					".local/share/nvim/lazy",
+				},
+				formatter_by_ft = formatter_by_ft
+			})
+		end
+	},
+	{
+		'ada0l/obsidian',
+		keys = {
+			{
+				'<leader>ov',
+				function()
+					Obsidian.select_vault()
+				end,
+				desc = "Select Obsidian vault",
+			},
+			{
+				'<leader>oo',
+				function()
+					Obsidian.get_current_vault(function()
+						Obsidian.cd_vault()
+					end)
+				end,
+				desc = 'Open Obsidian directory',
+			},
+			{
+				'<leader>ot',
+				function()
+					Obsidian.get_current_vault(function()
+						Obsidian.open_today()
+					end)
+				end,
+				desc = 'Open today',
+			},
+			{
+				'<leader>od',
+				function()
+					Obsidian.get_current_vault(function()
+						vim.ui.input({ prompt = 'Write shift in days: ' }, function(input_shift)
+							local shift = tonumber(input_shift) * 60 * 60 * 24
+							Obsidian.open_today(shift)
+						end)
+					end)
+				end,
+				desc = 'Open daily node with shift',
+			},
+			{
+				'<leader>on',
+				function()
+					Obsidian.get_current_vault(function()
+						vim.ui.input({ prompt = 'Write name of new note: ' }, function(name)
+							Obsidian.new_note(name)
+						end)
+					end)
+				end,
+				desc = 'New note',
+			},
+			{
+				'<leader>oi',
+				function()
+					Obsidian.get_current_vault(function()
+						Obsidian.select_template('telescope')
+					end)
+				end,
+				desc = 'Insert template',
+			},
+			{
+				'<leader>os',
+				function()
+					Obsidian.get_current_vault(function()
+						Obsidian.search_note('telescope')
+					end)
+				end,
+				desc = 'Search note',
+			},
+			{
+				'<leader>ob',
+				function()
+					Obsidian.get_current_vault(function()
+						Obsidian.select_backlinks('telescope')
+					end)
+				end,
+				desc = 'Select backlink',
+			},
+			{
+				'<leader>og',
+				function()
+					Obsidian.get_current_vault(function()
+						Obsidian.go_to()
+					end)
+				end,
+				desc = 'Go to file under cursor',
+			},
+			{
+				'<leader>or',
+				function()
+					Obsidian.get_current_vault(function()
+						vim.ui.input({ prompt = 'Rename file to' }, function(name)
+							Obsidian.rename(name)
+						end)
+					end)
+				end,
+				desc = 'Rename file with updating links',
+			},
+			{
+				"gf",
+				function()
+					if Obsidian.found_wikilink_under_cursor() ~= nil then
+						return "<cmd>lua Obsidian.get_current_vault(function() Obsidian.go_to() end)<CR>"
+					else
+						return "gf"
+					end
+				end,
+				noremap = false,
+				expr = true
+			}
+		},
+		opts = function()
+			return {
+				vaults = {
+					{
+						dir = '~/Notes/',
+						daily = {
+							dir = 'Journals/',
+							format = '%Y-%m-%d-%A',
+						},
+						templates = {
+							dir = 'Templates/',
+							date = '%Y-%d-%m',
+							time = '%Y-%d-%m',
+						},
+						note = {
+							dir = '',
+							transformator = function(filename)
+								if filename ~= nil and filename ~= '' then
+									return filename
+								end
+								return string.format('%d', os.time())
+							end,
+						},
+					}
+				}
+			}
+		end
 	},
 })
 
