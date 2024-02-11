@@ -9,6 +9,7 @@ vim.o.hlsearch = false
 vim.o.wrap = false
 vim.loader.enable()
 vim.cmd("imap <C-c> <Esc>")
+vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format()]]
 
 local nameSpaceId = vim.api.nvim_create_namespace("markdown")
 local maxLineLength = 80
@@ -64,7 +65,8 @@ require("lazy").setup({
 					vim.keymap.set("n", "gr", "<cmd>lua vim.lsp.buf.references()<cr>", opts)
 					vim.keymap.set("n", "gs", "<cmd>lua vim.lsp.buf.signature_help()<cr>", opts)
 					vim.keymap.set("n", "<F2>", "<cmd>lua vim.lsp.buf.rename()<cr>", opts)
-					vim.keymap.set({ "n", "x" }, "<F3>", "<cmd>lua vim.lsp.buf.format({async = true})<cr>", opts)
+					vim.keymap.set({ "n", "x" }, "<F3>",
+						"<cmd>lua vim.lsp.buf.format({async = true})<cr>", opts)
 					vim.keymap.set("n", "<F4>", "<cmd>lua vim.lsp.buf.code_action()<cr>", opts)
 				end,
 			})
@@ -90,7 +92,8 @@ require("lazy").setup({
 				unpack = unpack or table.unpack
 				local line, col = unpack(vim.api.nvim_win_get_cursor(0))
 				return col ~= 0
-					and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+				    and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") ==
+				    nil
 			end
 
 			cmp.setup({
@@ -218,44 +221,6 @@ require("lazy").setup({
 		end,
 	},
 	{
-		"elentok/format-on-save.nvim",
-		config = function()
-			local format_on_save = require("format-on-save")
-			local formatters = require("format-on-save.formatters")
-
-			local formatter_languages = {
-				prettier = {
-					"css",
-					"html",
-					"json",
-					"javascript",
-					"javascriptreact",
-					"markdown",
-					"scss",
-					"typescript",
-					"typescriptreact",
-				},
-				stylua = { "lua", "luau" },
-				lsp = { "php" },
-			}
-			local formatter_by_ft = {}
-			for formatter, languages in pairs(formatter_languages) do
-				for _, language in pairs(languages) do
-					formatter_by_ft[language] = formatters[formatter]
-				end
-			end
-
-			format_on_save.setup({
-				exclude_path_patterns = {
-					"/node_modules/",
-					"/vendor/",
-					".local/share/nvim/lazy",
-				},
-				formatter_by_ft = formatter_by_ft,
-			})
-		end,
-	},
-	{
 		"ada0l/obsidian",
 		keys = {
 			{
@@ -370,7 +335,7 @@ require("lazy").setup({
 			return {
 				vaults = {
 					{
-						dir = "~/Notes/",
+						dir = "~/Sync/Notes/",
 						daily = {
 							dir = "Journals/",
 							format = "%Y-%m-%d-%A",
@@ -411,9 +376,8 @@ require("lazy").setup({
 	},
 })
 
-vim.cmd("colorscheme catppuccin-frappe")
-
-vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
-vim.api.nvim_set_hl(0, "TelescopeNormalFloat", { bg = "none" })
+vim.cmd("colorscheme catppuccin-mocha")
+vim.cmd("highlight Normal ctermbg=none")
+vim.cmd("highlight NonText ctermbg=none")
+vim.cmd("highlight Normal guibg=none")
+vim.cmd("highlight NonText guibg=none")
