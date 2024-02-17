@@ -11,27 +11,6 @@ vim.loader.enable()
 vim.cmd("imap <C-c> <Esc>")
 vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format({async = true})]]
 
-local nameSpaceId = vim.api.nvim_create_namespace("markdown")
-local maxLineLength = 80
-function CheckForLongLine()
-	if (vim.fn.col('.') > maxLineLength) then
-		vim.api.nvim_buf_set_extmark(
-			0,
-			nameSpaceId,
-			vim.fn.line(".") - 1,
-			0,
-			{
-				id = vim.fn.line("."),
-				virt_text = { { "Exceeding max line length ("..maxLineLength..")", "WarningMsg" } },
-				virt_text_pos = "right_align"
-			})
-	else
-		vim.api.nvim_buf_del_extmark(0, nameSpaceId, vim.fn.line("."))
-	end
-end
-
-vim.cmd("autocmd TextChangedI *.md lua CheckForLongLine()")
-
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
 	vim.fn.system({
