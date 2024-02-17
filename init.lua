@@ -1,4 +1,4 @@
-vim.g.mapleader = " "
+				vim.g.mapleader = " "
 vim.o.nu = true
 vim.o.rnu = true
 vim.o.tabstop = 4
@@ -9,6 +9,7 @@ vim.o.hlsearch = false
 vim.o.wrap = false
 vim.loader.enable()
 vim.cmd("imap <C-c> <Esc>")
+vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format({async = true})]]
 
 local nameSpaceId = vim.api.nvim_create_namespace("markdown")
 local maxLineLength = 80
@@ -224,41 +225,6 @@ require("lazy").setup({
 		end,
 	},
 	{
-		"elentok/format-on-save.nvim",
-		config = function()
-			local format_on_save = require("format-on-save")
-			local formatters = require("format-on-save.formatters")
-
-			local formatter_languages = {
-				prettierd = {
-					"css",
-					"html",
-					"json",
-					"javascript",
-					"javascriptreact",
-					"markdown",
-					"scss",
-					"typescript",
-					"typescriptreact",
-				},
-			}
-			local formatter_by_ft = {}
-			for formatter, languages in pairs(formatter_languages) do
-				for _, language in pairs(languages) do
-					formatter_by_ft[language] = formatters[formatter]
-				end
-			end
-
-			format_on_save.setup({
-				exclude_path_patterns = {
-					"/node_modules/",
-					".local/share/nvim/lazy",
-				},
-				formatter_by_ft = formatter_by_ft
-			})
-		end
-	},
-	{
 		'ada0l/obsidian',
 		keys = {
 			{
@@ -373,9 +339,9 @@ require("lazy").setup({
 			return {
 				vaults = {
 					{
-						dir = '~/Notes/',
+						dir = '~/Sync/Notes/',
 						daily = {
-							dir = 'Journals/',
+							dir = 'Journal/',
 							format = '%Y-%m-%d-%A',
 						},
 						templates = {
