@@ -9,7 +9,6 @@ vim.o.hlsearch = false
 vim.o.wrap = false
 vim.loader.enable()
 vim.cmd("imap <C-c> <Esc>")
-vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format()]]
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -357,6 +356,25 @@ require("lazy").setup({
 		},
 		event = { "VeryLazy" },
 		config = true,
+	},
+	{
+		'stevearc/conform.nvim',
+		config = function()
+			require("conform").setup({
+				format_on_save = {
+					timeout_ms = 500,
+					lsp_fallback = true,
+				},
+				formatters_by_ft = {
+					lua = { "stylua" },
+					javascript = { { "prettierd", "prettier" } },
+					javascriptreact = { { "prettierd", "prettier" } },
+					typescript = { { "prettierd", "prettier" } },
+					typescriptreact = { { "prettierd", "prettier" } },
+					php = { "phpcbf" },
+				},
+			})
+		end
 	},
 })
 
